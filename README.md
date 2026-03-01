@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QMovie - Xem phim online miễn phí 🎬
 
-## Getting Started
+Website xem phim online hiện đại, được xây dựng với Next.js 15 và Tailwind CSS.
 
-First, run the development server:
+## ✨ Tính năng
+
+- 🎥 **Xem phim miễn phí** - Hàng ngàn bộ phim, phim lẻ, hoạt hình
+- 🔍 **Tìm kiếm thông minh** - Tìm phim nhanh chóng và chính xác
+- 📱 **Responsive Design** - Hoạt động mượt mà trên mọi thiết bị
+- ⚡ **Tốc độ cao** - Tối ưu hóa với Next.js App Router và caching
+- 🎨 **Giao diện đẹp mắt** - UI/UX hiện đại với Framer Motion
+- 💰 **Tích hợp quảng cáo** - Sẵn sàng monetization
+
+## 🚀 Công nghệ sử dụng
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Library**: Lucide React Icons
+- **Animation**: Framer Motion
+- **API**: Ophim API (https://ophim1.com)
+
+## 📦 Cài đặt
 
 ```bash
+# Cài đặt dependencies
+npm install
+
+# Chạy development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Mở [http://localhost:3000](http://localhost:3000) để xem kết quả.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Cấu trúc thư mục
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+my-movie-web/
+├── app/                    # Next.js App Router pages
+│   ├── phim/              # Trang chi tiết phim
+│   ├── xem-phim/          # Trang xem phim
+│   ├── phim-bo/           # Danh sách phim bộ
+│   ├── phim-le/           # Danh sách phim lẻ
+│   ├── hoat-hinh/         # Danh sách hoạt hình
+│   └── tim-kiem/          # Trang tìm kiếm
+├── src/
+│   ├── components/        # React components
+│   ├── services/          # API services
+│   ├── types/             # TypeScript types
+│   └── lib/               # Utility functions
+└── public/                # Static files
+```
 
-## Learn More
+## 💰 Monetization
 
-To learn more about Next.js, take a look at the following resources:
+Website đã được tích hợp sẵn các vị trí quảng cáo chiến lược. Để kích hoạt, thay thế code trong:
+- `src/components/ads/AdsBanner.tsx`
+- `src/components/ads/AdsSidebar.tsx`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm start
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Made with ❤️ by Quang
+# QPhim
