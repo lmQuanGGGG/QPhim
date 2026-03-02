@@ -132,7 +132,7 @@ async function getTopImdbMoviesByPages(
   }
   const recentMovies = [...uniqueMovies.values()];
   const imdbMovies = recentMovies
-    .filter((movie: any) => getImdbVoteCount(movie) >= 5000 && getImdbRating(movie) > 0)
+    .filter((movie: any) => getImdbVoteCount(movie) >= 1000 && getImdbRating(movie) > 0)
     .sort((a: any, b: any) => getImdbRating(b) - getImdbRating(a))
     .slice(0, limit);
   if (imdbMovies.length >= limit) return imdbMovies;
