@@ -2,11 +2,29 @@ import { movieService } from '@/services/api';
 import MovieCard from '@/components/MovieCard';
 import TopRankMovieCard from '@/components/TopRankMovieCard';
 import DraggableScrollRow from '@/components/DraggableScrollRow';
-import { Sparkles, TrendingUp, Film as FilmIcon, Clock, Globe2 } from 'lucide-react';
+import HeroCarousel from '@/components/HeroCarousel';
+import {
+  Play,
+  TrendingUp,
+  Film as FilmIcon,
+  Clock,
+  Globe2,
+  Sparkles,
+  ChevronRight,
+  Zap,
+  Crown,
+  Tv,
+  Clapperboard,
+  Flame,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
-export const revalidate = 300; // Revalidate mỗi 5 phút
+export const revalidate = 300;
+
+/* ────────────────────────────────────────────────────────────
+   Helper functions (unchanged)
+   ──────────────────────────────────────────────────────────── */
 
 function getMovieRating(movie: any): number {
   const candidates = [
@@ -17,12 +35,10 @@ function getMovieRating(movie: any): number {
     movie?.rate,
     movie?.vote_average,
   ];
-
   for (const value of candidates) {
     const num = typeof value === 'number' ? value : parseFloat(String(value));
     if (Number.isFinite(num)) return num;
   }
-
   return 0;
 }
 
@@ -38,14 +54,12 @@ function getImdbVoteCount(movie: any): number {
     movie?.imdb?.votes ??
     movie?.imdb?.voteCount ??
     movie?.imdb?.count;
-
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   if (typeof value === 'string') {
     const normalized = value.replace(/,/g, '').trim();
-    const parsed = parseInt(normalized, 20);
+    const parsed = parseInt(normalized, 10);
     return Number.isFinite(parsed) ? parsed : 0;
   }
-
   return 0;
 }
 
@@ -57,54 +71,46 @@ function getTmdbRating(movie: any): number {
 
 function getTmdbVoteCount(movie: any): number {
   const value = movie?.tmdb?.vote_count;
-
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   if (typeof value === 'string') {
     const normalized = value.replace(/,/g, '').trim();
-    const parsed = parseInt(normalized, 20);
+    const parsed = parseInt(normalized, 10);
     return Number.isFinite(parsed) ? parsed : 0;
   }
-
   return 0;
 }
 
 function getMovieModifiedDate(movie: any): Date | null {
   const rawTime = movie?.modified?.time;
   if (!rawTime) return null;
-
   if (typeof rawTime === 'number') {
     const timestamp = rawTime > 1_000_000_000_000 ? rawTime : rawTime * 1000;
     const date = new Date(timestamp);
     return Number.isNaN(date.getTime()) ? null : date;
   }
-
   const parsed = new Date(String(rawTime));
   if (!Number.isNaN(parsed.getTime())) return parsed;
-
   const asNumber = Number(rawTime);
   if (Number.isFinite(asNumber)) {
     const timestamp = asNumber > 1_000_000_000_000 ? asNumber : asNumber * 1000;
     const date = new Date(timestamp);
     return Number.isNaN(date.getTime()) ? null : date;
   }
-
   return null;
 }
 
 function isMovieWithinLastTwoMonths(movie: any): boolean {
   const modifiedDate = getMovieModifiedDate(movie);
   if (!modifiedDate) return false;
-
   const now = new Date();
   const twoMonthsAgo = new Date(now);
   twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-
   return modifiedDate >= twoMonthsAgo && modifiedDate <= now;
 }
 
 function isMovieFrom2015Onwards(movie: any): boolean {
   const yearValue = movie?.year;
-  const year = typeof yearValue === 'number' ? yearValue : parseInt(String(yearValue), 20);
+  const year = typeof yearValue === 'number' ? yearValue : parseInt(String(yearValue), 10);
   return Number.isFinite(year) && year >= 2015;
 }
 
@@ -115,9 +121,7 @@ async function getTopImdbMoviesByPages(
   const MAX_PAGES_TO_SCAN = 20;
   const pageNumbers = Array.from({ length: MAX_PAGES_TO_SCAN }, (_, i) => i + 1);
   const pageResults = await Promise.all(pageNumbers.map((page) => fetchPage(page)));
-
   const uniqueMovies = new Map<string, any>();
-
   for (const pageResult of pageResults) {
     for (const movie of pageResult.items || []) {
       if (!movie?._id || uniqueMovies.has(movie._id)) continue;
@@ -126,16 +130,12 @@ async function getTopImdbMoviesByPages(
       uniqueMovies.set(movie._id, movie);
     }
   }
-
   const recentMovies = [...uniqueMovies.values()];
-
   const imdbMovies = recentMovies
     .filter((movie: any) => getImdbVoteCount(movie) >= 5000 && getImdbRating(movie) > 0)
     .sort((a: any, b: any) => getImdbRating(b) - getImdbRating(a))
     .slice(0, limit);
-
   if (imdbMovies.length >= limit) return imdbMovies;
-
   const selectedIds = new Set(imdbMovies.map((movie: any) => movie._id));
   const tmdbFillMovies = recentMovies
     .filter(
@@ -146,316 +146,306 @@ async function getTopImdbMoviesByPages(
     )
     .sort((a: any, b: any) => getTmdbRating(b) - getTmdbRating(a))
     .slice(0, limit - imdbMovies.length);
-
   return [...imdbMovies, ...tmdbFillMovies];
 }
 
-// Component con để lazy load
-async function SeriesSection() {
-  const seriesMovies = await getTopImdbMoviesByPages((page) => movieService.getSeriesMovies(page), 20);
+/* ────────────────────────────────────────────────────────────
+   UI helpers
+   ──────────────────────────────────────────────────────────── */
+
+const ACCENT = {
+  red: 'from-red-500 to-rose-600',
+  blue: 'from-blue-500 to-indigo-600',
+  green: 'from-emerald-500 to-teal-600',
+  purple: 'from-violet-500 to-fuchsia-600',
+  orange: 'from-orange-500 to-amber-600',
+  pink: 'from-pink-500 to-rose-600',
+  yellow: 'from-yellow-400 to-orange-500',
+  cyan: 'from-cyan-400 to-blue-500',
+} as const;
+
+type AccentKey = keyof typeof ACCENT;
+
+function SectionHeader({
+  title,
+  href,
+  accent = 'red',
+  icon: Icon,
+}: {
+  title: string;
+  href: string;
+  accent?: AccentKey;
+  icon: React.ComponentType<any>;
+}) {
+  const gradient = ACCENT[accent];
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-start sm:text-left gap-4 mb-12">
-        <h2 className="text-3xl md:text-4xl font-black text-white flex items-center gap-4">
-          <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-2xl">
-            <FilmIcon className="w-8 h-8 text-white" />
-          </div>
-          Phim Bộ Hot
-        </h2>
-        <Link href="/phim-bo" className="text-red-500 hover:text-red-400 font-bold text-lg flex items-center gap-2 group">
-          Xem tất cả
-          <span className="group-hover:translate-x-1 transition-transform">→</span>
-        </Link>
+    <div className="flex items-center gap-3 sm:gap-4 mb-7 sm:mb-9">
+      <div
+        className={`flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}
+      >
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
       </div>
-      <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-        <div className="flex gap-5 md:gap-6 min-w-max snap-x snap-mandatory">
-          {seriesMovies.map((movie: any, index: number) => (
-            <div key={`${movie._id}-${index}`} className="w-[230px] md:w-[250px] lg:w-[280px] shrink-0 snap-start">
-              <MovieCard movie={movie} index={index} />
-            </div>
-          ))}
-        </div>
-      </DraggableScrollRow>
+      <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+        {title}
+      </h2>
+      <div
+        className={`hidden sm:block flex-1 h-px bg-gradient-to-r ${gradient} opacity-15`}
+      />
+      <Link
+        href={href}
+        className="ml-auto flex items-center gap-1 text-sm font-semibold text-zinc-500 hover:text-white transition-colors group"
+      >
+        Xem tất cả
+        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+      </Link>
+    </div>
+  );
+}
+
+function MovieScrollRow({
+  movies,
+  keyPrefix = '',
+}: {
+  movies: any[];
+  keyPrefix?: string;
+}) {
+  return (
+    <DraggableScrollRow className="overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
+      <div className="flex gap-4 sm:gap-5 lg:gap-6 min-w-max">
+        {movies.map((movie: any, index: number) => (
+          <div
+            key={`${keyPrefix}${movie._id}-${index}`}
+            className="w-[180px] sm:w-[210px] md:w-[240px] lg:w-[280px] xl:w-[310px] 2xl:w-[350px] shrink-0"
+          >
+            <MovieCard movie={movie} index={index} />
+          </div>
+        ))}
+      </div>
+    </DraggableScrollRow>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   Lazy-loaded category sections
+   ──────────────────────────────────────────────────────────── */
+
+async function SeriesSection() {
+  const movies = await getTopImdbMoviesByPages(
+    (page) => movieService.getSeriesMovies(page),
+    20
+  );
+  return (
+    <section className="relative">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+        <SectionHeader title="Phim Bộ Hot" href="/phim-bo" accent="blue" icon={Tv} />
+        <MovieScrollRow movies={movies} keyPrefix="series-" />
+      </div>
     </section>
   );
 }
 
 async function SingleMoviesSection() {
-  const singleMovies = await getTopImdbMoviesByPages((page) => movieService.getSingleMovies(page), 20);
+  const movies = await getTopImdbMoviesByPages(
+    (page) => movieService.getSingleMovies(page),
+    20
+  );
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-start sm:text-left gap-4 mb-12">
-        <h2 className="text-3xl md:text-4xl font-black text-white flex items-center gap-4">
-          <div className="bg-gradient-to-br from-green-500 to-teal-600 p-3 rounded-2xl">
-            <FilmIcon className="w-8 h-8 text-white" />
-          </div>
-          Phim Lẻ Hay
-        </h2>
-        <Link href="/phim-le" className="text-red-500 hover:text-red-400 font-bold text-lg flex items-center gap-2 group">
-          Xem tất cả
-          <span className="group-hover:translate-x-1 transition-transform">→</span>
-        </Link>
+    <section className="relative">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+        <SectionHeader title="Phim Lẻ Hay" href="/phim-le" accent="green" icon={Clapperboard} />
+        <MovieScrollRow movies={movies} keyPrefix="single-" />
       </div>
-      <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-        <div className="flex gap-5 md:gap-6 min-w-max snap-x snap-mandatory">
-          {singleMovies.map((movie: any, index: number) => (
-            <div key={`${movie._id}-${index}`} className="w-[230px] md:w-[250px] lg:w-[280px] shrink-0 snap-start">
-              <MovieCard movie={movie} index={index} />
-            </div>
-          ))}
-        </div>
-      </DraggableScrollRow>
     </section>
   );
 }
 
 async function KoreanSection() {
-  const koreanMovies = await getTopImdbMoviesByPages(
+  const movies = await getTopImdbMoviesByPages(
     (page) => movieService.getMoviesByCountry('han-quoc', page),
     20
   );
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-start sm:text-left gap-4 mb-12">
-        <h2 className="text-3xl md:text-4xl font-black text-white flex items-center gap-4">
-          <div className="bg-gradient-to-br from-red-500 to-pink-600 p-3 rounded-2xl animate-pulse">
-            <TrendingUp className="w-8 h-8 text-white" />
-          </div>
-          Phim Hàn Quốc HOT 🇰🇷
-        </h2>
-        <Link href="/quoc-gia/han-quoc" className="text-red-500 hover:text-red-400 font-bold text-lg flex items-center gap-2 group">
-          Xem tất cả
-          <span className="group-hover:translate-x-1 transition-transform">→</span>
-        </Link>
+    <section className="relative">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+        <SectionHeader title="Phim Hàn Quốc" href="/quoc-gia/han-quoc" accent="pink" icon={Flame} />
+        <MovieScrollRow movies={movies} keyPrefix="korean-" />
       </div>
-      <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-        <div className="flex gap-5 md:gap-6 min-w-max snap-x snap-mandatory">
-          {koreanMovies.map((movie: any, index: number) => (
-            <div key={`${movie._id}-${index}`} className="w-[230px] md:w-[250px] lg:w-[280px] shrink-0 snap-start">
-              <MovieCard movie={movie} index={index} />
-            </div>
-          ))}
-        </div>
-      </DraggableScrollRow>
     </section>
   );
 }
 
 async function ChineseSection() {
-  const chineseMovies = await getTopImdbMoviesByPages(
+  const movies = await getTopImdbMoviesByPages(
     (page) => movieService.getMoviesByCountry('trung-quoc', page),
     10
   );
-
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-start sm:text-left gap-4 mb-12">
-        <h2 className="text-3xl md:text-4xl font-black text-white flex items-center gap-4">
-          <div className="bg-gradient-to-br from-rose-500 to-red-700 p-3 rounded-2xl">
-            <Globe2 className="w-8 h-8 text-white" />
-          </div>
-          Phim Trung Quốc Hot 🇨🇳
-        </h2>
-        <Link href="/quoc-gia/trung-quoc" className="text-red-500 hover:text-red-400 font-bold text-lg flex items-center gap-2 group">
-          Xem tất cả
-          <span className="group-hover:translate-x-1 transition-transform">→</span>
-        </Link>
+    <section className="relative">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+        <SectionHeader title="Phim Trung Quốc" href="/quoc-gia/trung-quoc" accent="orange" icon={Globe2} />
+        <MovieScrollRow movies={movies} keyPrefix="chinese-" />
       </div>
-
-      <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-        <div className="flex gap-5 md:gap-6 min-w-max snap-x snap-mandatory">
-          {chineseMovies.map((movie: any, index: number) => (
-            <div key={`${movie._id}-${index}`} className="w-[230px] md:w-[250px] lg:w-[280px] shrink-0 snap-start">
-              <MovieCard movie={movie} index={index} />
-            </div>
-          ))}
-        </div>
-      </DraggableScrollRow>
     </section>
   );
 }
 
 async function CartoonSection() {
-  const cartoonMovies = await getTopImdbMoviesByPages((page) => movieService.getCartoonMovies(page), 10);
-
+  const movies = await getTopImdbMoviesByPages(
+    (page) => movieService.getCartoonMovies(page),
+    10
+  );
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-start sm:text-left gap-4 mb-12">
-        <h2 className="text-3xl md:text-4xl font-black text-white flex items-center gap-4">
-          <div className="bg-gradient-to-br from-purple-500 to-fuchsia-600 p-3 rounded-2xl">
-            <FilmIcon className="w-8 h-8 text-white" />
-          </div>
-          Phim Hoạt Hình Nổi Bật 🎬
-        </h2>
-        <Link href="/hoat-hinh" className="text-red-500 hover:text-red-400 font-bold text-lg flex items-center gap-2 group">
-          Xem tất cả
-          <span className="group-hover:translate-x-1 transition-transform">→</span>
-        </Link>
+    <section className="relative">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+        <SectionHeader title="Hoạt Hình Nổi Bật" href="/hoat-hinh" accent="purple" icon={Sparkles} />
+        <MovieScrollRow movies={movies} keyPrefix="cartoon-" />
       </div>
-
-      <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-        <div className="flex gap-5 md:gap-6 min-w-max snap-x snap-mandatory">
-          {cartoonMovies.map((movie: any, index: number) => (
-            <div key={`${movie._id}-${index}`} className="w-[230px] md:w-[250px] lg:w-[280px] shrink-0 snap-start">
-              <MovieCard movie={movie} index={index} />
-            </div>
-          ))}
-        </div>
-      </DraggableScrollRow>
     </section>
   );
 }
 
-// Loading skeleton component
+/* ────────────────────────────────────────────────────────────
+   Loading skeleton
+   ──────────────────────────────────────────────────────────── */
+
 function LoadingSection({ title }: { title: string }) {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-      <div className="flex items-center justify-between mb-12">
-        <h2 className="text-3xl md:text-4xl font-black text-white">{title}</h2>
-      </div>
-      <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-        <div className="flex gap-5 md:gap-6 min-w-max">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="animate-pulse w-[230px] md:w-[250px] lg:w-[280px] shrink-0">
-              <div className="aspect-[2/3] bg-zinc-800 rounded-xl mb-3"></div>
-              <div className="h-4 bg-zinc-800 rounded mb-2"></div>
-              <div className="h-3 bg-zinc-800 rounded w-2/3"></div>
-            </div>
-          ))}
+    <section className="relative">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+        <div className="flex items-center gap-3 sm:gap-4 mb-7 sm:mb-9">
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-zinc-800 animate-pulse" />
+          <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white">
+            {title}
+          </h2>
+          <div className="hidden sm:block flex-1 h-px bg-zinc-800/50" />
         </div>
-      </DraggableScrollRow>
+        <div className="overflow-hidden">
+          <div className="flex gap-3 sm:gap-4 lg:gap-5">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="w-[155px] sm:w-[175px] md:w-[195px] lg:w-[215px] xl:w-[235px] 2xl:w-[255px] shrink-0"
+              >
+                <div className="aspect-[2/3] bg-zinc-800/50 rounded-2xl shimmer" />
+                <div className="mt-3 space-y-2">
+                  <div className="h-4 bg-zinc-800/50 rounded-lg w-3/4" />
+                  <div className="h-3 bg-zinc-800/50 rounded-lg w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
+/* ────────────────────────────────────────────────────────────
+   Home page
+   ──────────────────────────────────────────────────────────── */
+
 export default async function Home() {
-  // Fetch chỉ phim mới cập nhật để load nhanh, các section khác load sau
   const newMoviesData = await movieService.getNewMovies(1);
   const recentMovies = newMoviesData.items.filter(
-    (movie: any) => isMovieWithinLastTwoMonths(movie) && isMovieFrom2015Onwards(movie)
+    (movie: any) =>
+      isMovieWithinLastTwoMonths(movie) && isMovieFrom2015Onwards(movie)
   );
-  const topRatedMovies = await getTopImdbMoviesByPages((page) => movieService.getNewMovies(page), 10);
-  const heroMovie = topRatedMovies[0] || recentMovies[0] || newMoviesData.items[0];
+  const topRatedMovies = await getTopImdbMoviesByPages(
+    (page) => movieService.getNewMovies(page),
+    10
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black">
-      {/* Hero Section - Tối ưu hơn */}
-      <section className="relative h-[75vh] mb-12">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('https://img.ophim.live/uploads/movies/${heroMovie?.thumb_url}')`,
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
-          <div className="absolute inset-0 backdrop-blur-[2px]" />
-        </div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-end pb-20">
-          <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 bg-red-600/90 backdrop-blur-sm px-4 py-2 rounded-full">
-              <Sparkles className="w-4 h-4 text-white animate-pulse" />
-              <span className="text-white font-semibold text-sm uppercase tracking-wider">
-                Top rating hôm nay
-              </span>
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl font-black text-white drop-shadow-2xl leading-tight">
-              {heroMovie?.name}
-            </h1>
-            
-            <p className="text-zinc-200 text-lg md:text-xl font-medium drop-shadow-lg">
-              {heroMovie?.origin_name}
-            </p>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href={`/phim/${heroMovie?.slug}`}
-                className="group bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-full font-bold text-lg flex items-center gap-3 transition-all hover:scale-105 shadow-2xl shadow-red-600/50"
-              >
-                <FilmIcon className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                Xem ngay
-              </Link>
+    <div className="min-h-screen bg-[#07070d] relative">
+      {/* Ambient background glows */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-0">
+        <div className="absolute -top-40 left-[20%] w-[700px] h-[700px] bg-red-600/[0.025] rounded-full blur-[180px]" />
+        <div className="absolute top-[40%] -right-32 w-[550px] h-[550px] bg-blue-600/[0.025] rounded-full blur-[160px]" />
+        <div className="absolute bottom-[20%] left-[10%] w-[450px] h-[450px] bg-purple-600/[0.02] rounded-full blur-[150px]" />
+      </div>
+
+      {/* Grain texture */}
+      <div className="grain" />
+
+      {/* HERO CAROUSEL */}
+      <HeroCarousel movies={topRatedMovies} />
+
+      {/* ═══════════════════════════════════════
+          CONTENT SECTIONS
+          ═══════════════════════════════════════ */}
+      <div className="relative z-10 space-y-14 sm:space-y-20 lg:space-y-24 pb-20 sm:pb-28">
+        {/* Top 10 Ranking */}
+        <section>
+          <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+            <div className="flex items-center gap-3 sm:gap-4 mb-7 sm:mb-9">
               
-              <div className="flex items-center gap-2 text-sm">
-                <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-semibold">
-                  {heroMovie?.quality}
-                </span>
-                <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-semibold">
-                  {heroMovie?.year}
-                </span>
-                <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-semibold">
-                  {heroMovie?.lang}
-                </span>
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+                Top 10 Rating Cao Nhất
+              </h2>
+              <div className="hidden sm:block flex-1 h-px bg-gradient-to-r from-yellow-500/20 to-transparent" />
+            </div>
+
+            <DraggableScrollRow className="overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
+              <div className="flex gap-4 sm:gap-5 lg:gap-6 min-w-max">
+                {topRatedMovies.map((movie: any, index: number) => (
+                  <div
+                    key={`top-${movie._id}-${index}`}
+                    className="w-[220px] sm:w-[240px] md:w-[260px] lg:w-[300px] xl:w-[320px] 2xl:w-[340px] shrink-0"
+                  >
+                    <TopRankMovieCard movie={movie} rank={index + 1} />
+                  </div>
+                ))}
               </div>
+            </DraggableScrollRow>
+          </div>
+        </section>
+
+        {/* New Movies - Grid Layout */}
+        <section>
+          <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
+            <SectionHeader title="Mới Cập Nhật" href="/phim-moi" accent="yellow" icon={Zap} />
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+              {newMoviesData.items.slice(0, 18).map((movie: any, index: number) => (
+                <div key={`new-${movie._id}-${index}`}>
+                  <MovieCard movie={movie} index={index} />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex justify-center">
+              <Link
+                href="/phim-moi"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-full text-sm font-semibold text-white/80 bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] transition-all"
+              >
+                Xem thêm phim mới
+                <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Top 10 phim rating cao nhất */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-        <div className="mb-12">
-          
-        </div>
+        {/* Lazy category sections */}
+        <Suspense fallback={<LoadingSection title="Phim Bộ Hot" />}>
+          <SeriesSection />
+        </Suspense>
 
-        <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-          <div className="flex gap-6 min-w-max snap-x snap-mandatory">
-            {topRatedMovies.map((movie: any, index: number) => (
-              <div key={`top-${movie._id}-${index}`} className="w-[300px] lg:w-[360px] shrink-0 snap-start">
-                <TopRankMovieCard movie={movie} rank={index + 1} />
-              </div>
-            ))}
-          </div>
-        </DraggableScrollRow>
-      </section>
+        <Suspense fallback={<LoadingSection title="Phim Lẻ Hay" />}>
+          <SingleMoviesSection />
+        </Suspense>
 
-      {/* Phim Mới Cập Nhật */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-start sm:text-left gap-4 mb-12">
-          <h2 className="text-3xl md:text-4xl font-black text-white flex items-center gap-4">
-            <div className="bg-gradient-to-br from-yellow-400 to-orange-600 p-3 rounded-2xl">
-              <Clock className="w-8 h-8 text-white" />
-            </div>
-            Mới cập nhật hôm nay
-          </h2>
-          <Link href="/phim-moi" className="text-red-500 hover:text-red-400 font-bold text-lg flex items-center gap-2 group">
-            Xem tất cả
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </Link>
-        </div>
-        <DraggableScrollRow className="overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-          <div className="flex gap-5 md:gap-6 min-w-max snap-x snap-mandatory">
-            {newMoviesData.items.slice(0, 10).map((movie: any, index: number) => (
-              <div key={`${movie._id}-${index}`} className="w-[230px] md:w-[250px] lg:w-[280px] shrink-0 snap-start">
-                <MovieCard movie={movie} index={index} />
-              </div>
-            ))}
-          </div>
-        </DraggableScrollRow>
-      </section>
+        <Suspense fallback={<LoadingSection title="Phim Hàn Quốc" />}>
+          <KoreanSection />
+        </Suspense>
 
-      {/* Lazy load các section khác */}
-      <Suspense fallback={<LoadingSection title="Phim Bộ Hot" />}>
-        <SeriesSection />
-      </Suspense>
+        <Suspense fallback={<LoadingSection title="Phim Trung Quốc" />}>
+          <ChineseSection />
+        </Suspense>
 
-      <Suspense fallback={<LoadingSection title="Phim Lẻ Hay" />}>
-        <SingleMoviesSection />
-      </Suspense>
-
-      <Suspense fallback={<LoadingSection title="Phim Trung Quốc Hot 🇨🇳" />}>
-        <ChineseSection />
-      </Suspense>
-
-      <Suspense fallback={<LoadingSection title="Phim Hoạt Hình Nổi Bật 🎬" />}>
-        <CartoonSection />
-      </Suspense>
-
-      <Suspense fallback={<LoadingSection title="Phim Hàn Quốc HOT 🇰🇷" />}>
-        <KoreanSection />
-      </Suspense>
+        <Suspense fallback={<LoadingSection title="Hoạt Hình Nổi Bật" />}>
+          <CartoonSection />
+        </Suspense>
+      </div>
     </div>
   );
 }
-

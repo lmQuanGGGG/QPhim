@@ -37,7 +37,7 @@ export default async function TimKiemPage({
 
   return (
     <div className="min-h-screen bg-black pt-20 pb-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <Search className="w-8 h-8 text-red-600" />

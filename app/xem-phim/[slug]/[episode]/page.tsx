@@ -67,7 +67,7 @@ export default async function WatchMoviePage({
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-24 pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-zinc-600 mb-6 flex-wrap">

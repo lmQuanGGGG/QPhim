@@ -73,11 +73,16 @@ export default function EpisodeSidebar({ episodes, currentEpisodeSlug, movieSlug
     return (
         <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl overflow-hidden flex flex-col h-[620px] lg:h-[600px]">
       {/* Header */}
-      <div className="p-4 border-b border-zinc-800/50 bg-zinc-900/80 backdrop-blur-md z-10">
-                <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
+      <div className="px-4 pt-4 pb-3 border-b border-zinc-800/50 bg-zinc-900/80 backdrop-blur-md z-10 space-y-3">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-white font-bold text-base flex items-center gap-2">
                         <span className="w-1 h-5 bg-red-600 rounded-full" />
                         Danh sách tập
-        </h3>
+                    </h3>
+                    <p className="text-zinc-400 text-xs font-medium">
+                        {allEpisodes.length} tập
+                    </p>
+                </div>
 
         {/* Server Selection if multiple */}
         {episodes.length > 1 && (
@@ -102,32 +107,13 @@ export default function EpisodeSidebar({ episodes, currentEpisodeSlug, movieSlug
             </div>
         )}
 
-        {/* Search */}
-        <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-            <input 
-                type="text" 
-                placeholder="Tìm tập..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-red-600/50 transition-colors"
-            />
-        </div>
-
+       
       </div>
 
-            {/* Title / Range */}
-            <div className="px-4 py-3 border-b border-zinc-800/50 flex items-center justify-between gap-2">
-                <h4 className="text-zinc-100 font-bold text-xl">Danh sách tập</h4>
-                <p className="text-zinc-400 text-sm font-medium whitespace-nowrap">
-                    Tập {Math.min(chunkStart + 1, allEpisodes.length)}-{Math.min(chunkEnd, allEpisodes.length)} / {allEpisodes.length}
-                </p>
-            </div>
-
       {/* Episode List */}
-            <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+            <div ref={listRef} className="flex-1 overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
                 {episodesToRender.length > 0 ? (
-                         <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-3 gap-2.5">
+                         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-3">
                                 {episodesToRender.map((episode, idx) => {
                     const isActive = episode.slug === currentEpisodeSlug;
                     return (
@@ -135,13 +121,13 @@ export default function EpisodeSidebar({ episodes, currentEpisodeSlug, movieSlug
                             key={`${episode.slug}-${idx}`}
                             href={`/xem-phim/${movieSlug}/${episode.slug}`}
                             ref={isActive ? activeEpisodeRef : null}
-                                                        className={`group relative flex items-center justify-center py-3.5 px-2 rounded-xl text-lg font-semibold transition-all border ${
+                                                        className={`group relative flex items-center justify-center py-3 px-2 rounded-lg text-sm font-semibold transition-all border ${
                                 isActive 
-                                                                        ? 'bg-zinc-700/90 text-white border-zinc-500 shadow-lg' 
-                                                                        : 'bg-zinc-800/40 text-zinc-300 border-zinc-700/40 hover:bg-zinc-800 hover:text-white hover:border-zinc-600'
+                                                                        ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/20' 
+                                                                        : 'bg-zinc-800/50 text-zinc-300 border-zinc-700/40 hover:bg-zinc-700 hover:text-white hover:border-zinc-600'
                             }`}
                         >
-                                                        {isActive && <span className="absolute left-3 right-3 bottom-1 h-1 rounded-full bg-yellow-300" />}
+                                                        {isActive && <span className="absolute left-2 right-2 bottom-0.5 h-0.5 rounded-full bg-white/50" />}
                             <span className="truncate">{episode.name}</span>
                         </Link>
                     );
@@ -204,9 +190,12 @@ export default function EpisodeSidebar({ episodes, currentEpisodeSlug, movieSlug
             )}
 
             {/* Footer / Stats */}
-            <div className="p-3 bg-zinc-900/80 border-t border-zinc-800/50 text-center">
+            <div className="px-3 py-2 bg-zinc-900/80 border-t border-zinc-800/50 text-center">
                 <p className="text-xs text-zinc-500">
-                        Tổng số: <span className="text-zinc-300 font-bold">{allEpisodes.length}</span> tập
+                    {!normalizedQuery && totalChunks > 1 && (
+                        <span>Tập {Math.min(chunkStart + 1, allEpisodes.length)}-{Math.min(chunkEnd, allEpisodes.length)} / </span>
+                    )}
+                    Tổng: <span className="text-zinc-300 font-bold">{allEpisodes.length}</span> tập
                 </p>
             </div>
     </div>

@@ -20,7 +20,7 @@ export default async function PhimMoiPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black pt-24 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
         {/* Header */}
         <div className="flex items-center gap-4 mb-12">
           <div className="bg-gradient-to-br from-yellow-400 to-orange-600 p-3 rounded-2xl">

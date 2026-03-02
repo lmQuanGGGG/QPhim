@@ -113,7 +113,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
           HERO SECTION (Cinematic)
       ══════════════════════════════════ */}
       <div className="relative w-full h-[65vh] lg:h-[75vh] overflow-hidden group">
-        <div className="absolute inset-0 bg-black/60 z-10" />
+        <div className="absolute inset-0 bg-black/25 z-10" />
         
         {/* Backdrop Image */}
         <div 
@@ -122,52 +122,52 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
         />
         
         {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent z-20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent z-20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent z-20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/70 via-transparent to-transparent z-20" />
         
         {/* Content on Hero */}
         <div className="absolute inset-0 z-30 flex items-center">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-20 lg:mt-0">
-                <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-10 items-end">
+            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 w-full mt-20 lg:mt-0">
+                <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-10 items-end">
                     
-                    {/* Left: Poster (Desktop only placeholder to align layout) */}
-                    <div className="hidden lg:block relative aspect-[2/3] rounded-xl shadow-2xl rotate-1 group-hover:rotate-0 transition-transform duration-500 origin-bottom-left border border-white/10 overflow-hidden bg-zinc-900">
+                    {/* Left: Thumbnail (Desktop only - landscape) */}
+                    <div className="hidden lg:block relative aspect-video rounded-xl shadow-2xl rotate-1 group-hover:rotate-0 transition-transform duration-500 origin-bottom-left border border-white/10 overflow-hidden bg-zinc-900">
                          <Image
-                            src={movie.poster_url}
+                            src={movie.thumb_url}
                             alt={movie.name}
                             fill
                             className="object-cover"
                             priority
-                            sizes="300px"
+                            sizes="480px"
                           />
                     </div>
 
                     {/* Right: Info */}
-                    <div className="lg:mb-10 space-y-6">
+                    <div className="lg:mb-10 space-y-8">
                         {/* Breadcrumbs / Badges */}
-                        <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wider text-red-500">
-                             <span className="bg-red-600/10 border border-red-600/20 px-3 py-1 rounded text-red-500 backdrop-blur-md">
+                        <div className="flex flex-wrap gap-3 text-xs font-bold uppercase tracking-wider">
+                             <span className="bg-red-600/20 border border-red-500/30 px-4 py-1.5 rounded-lg text-red-400 backdrop-blur-md">
                                 {movie.quality}
                              </span>
-                             <span className="bg-white/5 border border-white/10 px-3 py-1 rounded text-zinc-300 backdrop-blur-md">
+                             <span className="bg-white/10 border border-white/15 px-4 py-1.5 rounded-lg text-zinc-200 backdrop-blur-md">
                                 {movie.lang}
                              </span>
-                             <span className="bg-white/5 border border-white/10 px-3 py-1 rounded text-zinc-300 backdrop-blur-md flex items-center gap-1.5">
+                             <span className="bg-white/10 border border-white/15 px-4 py-1.5 rounded-lg text-zinc-200 backdrop-blur-md flex items-center gap-2">
                                 <Clock className="w-3.5 h-3.5" /> {movie.time}
                              </span>
                         </div>
 
-                        <div>
+                        <div className="space-y-3">
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight drop-shadow-lg">
                                 {movie.name}
                             </h1>
-                            <p className="text-xl md:text-2xl text-zinc-400 font-light mt-2 italic tracking-wide">
+                            <p className="text-xl md:text-2xl text-zinc-300 font-light italic tracking-wide">
                                 {movie.origin_name} ({movie.year})
                             </p>
                         </div>
                         
                         {/* Meta */}
-                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-zinc-300 text-sm md:text-base font-medium">
+                        <div className="flex flex-wrap gap-x-8 gap-y-3 text-zinc-200 text-sm md:text-base font-medium">
                             {movie.country?.[0] && (
                                 <div className="flex items-center gap-2">
                                     <Globe className="w-4 h-4 text-red-500" />
@@ -187,27 +187,28 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-wrap items-center gap-4 pt-4">
+                        <div className="flex flex-wrap items-center gap-5 pt-6">
                             {firstEpisode ? (
                                 <Link
                                     href={`/xem-phim/${movie.slug}/${firstEpisode.slug}`}
-                                    className="group relative inline-flex items-center gap-3 bg-red-600 text-white px-8 py-4 rounded-full font-bold text-lg transition-all hover:scale-105 hover:bg-red-700 shadow-[0_0_40px_-10px_rgba(220,38,38,0.6)]"
+                                    className="group inline-flex items-center gap-3 bg-gradient-to-r from-red-600 to-red-500 text-white pl-5 pr-8 py-3.5 rounded-2xl font-bold text-lg transition-all hover:scale-105 hover:from-red-500 hover:to-red-400 shadow-lg shadow-red-600/30"
                                 >
-                                    <Play className="w-6 h-6 fill-current" />
+                                    <span className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center">
+                                      <Play className="w-5 h-5 fill-current ml-0.5" />
+                                    </span>
                                     <span>Xem Ngay</span>
-                                    <div className="absolute inset-0 rounded-full ring-2 ring-white/20 group-hover:ring-white/40 transition-all" />
                                 </Link>
                             ) : (
-                                <button disabled className="bg-zinc-800 text-zinc-500 px-8 py-4 rounded-full font-bold cursor-not-allowed">
+                                <button disabled className="bg-zinc-800 text-zinc-500 pl-5 pr-8 py-3.5 rounded-2xl font-bold cursor-not-allowed">
                                     Sắp chiếu
                                 </button>
                             )}
                             
-                            <button className="h-14 w-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 flex items-center justify-center transition-all hover:scale-110 group">
-                                <Heart className="w-6 h-6 text-white group-hover:text-red-500 transition-colors" />
+                            <button className="h-12 w-12 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/15 flex items-center justify-center transition-all hover:scale-110 group">
+                                <Heart className="w-5 h-5 text-white group-hover:text-red-500 transition-colors" />
                             </button>
-                            <button className="h-14 w-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 flex items-center justify-center transition-all hover:scale-110 text-white">
-                                <Share2 className="w-6 h-6" />
+                            <button className="h-12 w-12 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/15 flex items-center justify-center transition-all hover:scale-110 text-white">
+                                <Share2 className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
@@ -219,13 +220,13 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ sl
       {/* ══════════════════════════════════
           BODY CONTENT
       ══════════════════════════════════ */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-40">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 relative z-40">
         
-        {/* Mobile Poster (visible only on small screens) */}
+        {/* Mobile Thumbnail (visible only on small screens - landscape) */}
         <div className="lg:hidden -mt-24 mb-8 flex justify-center">
-             <div className="relative w-48 aspect-[2/3] rounded-xl shadow-2xl overflow-hidden border-2 border-zinc-800">
+             <div className="relative w-full max-w-md aspect-video rounded-xl shadow-2xl overflow-hidden border-2 border-zinc-800">
                 <Image
-                    src={movie.poster_url}
+                    src={movie.thumb_url}
                     alt={movie.name}
                     fill
                     className="object-cover"
